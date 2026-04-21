@@ -7,7 +7,7 @@
 [![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-brightgreen)](package.json)
 [![Transport: HTTP](https://img.shields.io/badge/transport-Streamable%20HTTP-green)](https://spec.modelcontextprotocol.io/specification/basic/transports/)
 [![Tools](https://img.shields.io/badge/tools-30-blueviolet)](#tools-by-tier)
-[![GitHub stars](https://img.shields.io/github/stars/ilay25-coder/support-mcp?style=social)](https://github.com/ilay25-coder/support-mcp/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/tehprof/support-mcp?style=social)](https://github.com/tehprof/support-mcp/stargazers)
 
 **TehProf Support** ([support.tehprof.kz](https://support.tehprof.kz)) is a multi-tenant SaaS helpdesk built for IT service companies. This server exposes **30 AI tools** covering knowledge search, ticket lifecycle, analytics, automation, and Bitrix24 CRM proxy — gated by subscription tier.
 
@@ -197,7 +197,7 @@ Report vulnerabilities to `ilay25@gmail.com` (please do not open public issues f
 For tenants who need the MCP server running in their own network:
 
 ```bash
-git clone https://github.com/ilay25-coder/support-mcp
+git clone https://github.com/tehprof/support-mcp
 cd support-mcp
 npm install
 npm run build
@@ -221,7 +221,7 @@ The tool is hidden from `tools/list` — AI agents never see it. Upgrade at [sup
 Call MCP `tools/list` — the server filters in real time based on your `Authorization` header.
 
 **Where is the source code?**
-Right here — [github.com/ilay25-coder/support-mcp](https://github.com/ilay25-coder/support-mcp). MIT licensed.
+Right here — [github.com/tehprof/support-mcp](https://github.com/tehprof/support-mcp). MIT licensed.
 
 ## Links
 
