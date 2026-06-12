@@ -48,6 +48,7 @@ export async function validateApiKey(apiKey: string): Promise<AuthContext | null
       tenantName: data.tenant_name || 'unknown',
       tenantPlan: (data.tenant_plan || 'free') as TenantPlan,
       apiKeyId: data.api_key_id || 0,
+      apiKey,
       scopes: data.scopes || [],
     };
   } catch {

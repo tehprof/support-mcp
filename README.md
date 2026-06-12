@@ -6,10 +6,10 @@
 [![MCP Protocol](https://img.shields.io/badge/MCP-2025--03--26-blue)](https://modelcontextprotocol.io)
 [![Node](https://img.shields.io/badge/node-%E2%89%A5%2020-brightgreen)](package.json)
 [![Transport: HTTP](https://img.shields.io/badge/transport-Streamable%20HTTP-green)](https://spec.modelcontextprotocol.io/specification/basic/transports/)
-[![Tools](https://img.shields.io/badge/tools-30-blueviolet)](#tools-by-tier)
+[![Tools](https://img.shields.io/badge/tools-36-blueviolet)](#tools-by-tier)
 [![GitHub stars](https://img.shields.io/github/stars/tehprof/support-mcp?style=social)](https://github.com/tehprof/support-mcp/stargazers)
 
-**TehProf Support** ([support.tehprof.kz](https://support.tehprof.kz)) is a multi-tenant SaaS helpdesk built for IT service companies. This server exposes **30 AI tools** covering knowledge search, ticket lifecycle, analytics, automation, and Bitrix24 CRM proxy — gated by subscription tier.
+**TehProf Support** ([support.tehprof.kz](https://support.tehprof.kz)) is a multi-tenant SaaS helpdesk built for IT service companies. This server exposes **36 AI tools** covering knowledge search, ticket lifecycle, analytics, automation, and Bitrix24 CRM proxy — gated by subscription tier.
 
 Zero installation: use the hosted endpoint at `https://support.tehprof.kz/mcp`.
 
@@ -107,7 +107,7 @@ The server gates tools by your TehProf Support plan. Anonymous (no API key) work
 
 | Tool | What it does |
 |------|-------------|
-| `tickets_create` | Create new tickets |
+| `tickets_create` | Create new tickets; can sync the customer company/contact by your own stable external IDs (idempotent) and dedupe by `external_ref` |
 | `tickets_reply` | Post replies on behalf of an operator |
 | `tickets_update` | Change status / priority |
 | `analytics_sla` | SLA compliance report |
@@ -182,11 +182,15 @@ The response lists server capabilities, auth requirements, and tier descriptors.
 
 Keys are hashed at rest, rate-limited, and validated against the tenant's plan on every call.
 
+The same tenant API key may also be used by GPT/OpenAPI clients against `https://support.tehprof.kz/api/openapi.json` as `Authorization: Bearer <key>`. Direct REST integrations that call `/api/admin.php` use `X-Api-Key: <key>` instead.
+
 ## Security
 
 - **Transport**: TLS 1.3, HSTS, no mixed content.
 - **CORS**: allowlist (`support.tehprof.kz`, `claude.ai`, `chat.openai.com`) — no wildcard.
 - **Sessions**: 1-hour inactivity TTL, evicted every 5 minutes.
+- **Tenant isolation**: authenticated MCP/OpenAPI calls resolve the tenant from the API key; mismatched `tenant_id` is rejected with `403`.
+- **Internal bridge**: `mcp-auth.php` is not public; `mcp-internal.php` requires Bearer auth for tenant data and write actions require `write` scope.
 - **Secrets**: never sent client-side, stored in HashiCorp Vault server-side.
 - **Audit log**: every tool call is recorded against the tenant.
 

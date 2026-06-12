@@ -24,6 +24,7 @@ export interface AuthContext {
   tenantName: string;
   tenantPlan: TenantPlan;
   apiKeyId: number;
+  apiKey?: string;
   scopes: string[];
 }
 

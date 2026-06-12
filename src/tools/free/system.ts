@@ -3,6 +3,7 @@
  * Health check, service info, platform status.
  */
 import { registerTool } from '../../tool-registry.js';
+import { supportGet } from '../../support-client.js';
 
 registerTool({
   name: 'system_health',
@@ -89,12 +90,7 @@ registerTool({
     }
 
     try {
-      const base = process.env.SUPPORT_API_URL || 'http://127.0.0.1:8095';
-      const res = await fetch(`${base}/api/mcp-internal.php?action=tenant_info&tenant_id=${ctx.tenantId}`, {
-        headers: { 'X-MCP-Tenant-Id': String(ctx.tenantId) },
-      });
-      const data = await res.json();
-      return data;
+      return await supportGet('mcp-internal.php', ctx, { action: 'tenant_info' });
     } catch {
       return { tenant_id: ctx.tenantId, name: ctx.tenantName, plan: ctx.tenantPlan };
     }

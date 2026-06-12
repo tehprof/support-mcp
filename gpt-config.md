@@ -67,6 +67,8 @@ Authentication: API Key (Bearer)
 - API Key: (user provides their key)
 - Auth Header: Authorization
 - Header Prefix: Bearer
+- Tenant is resolved from the API key. Do not invent or change `tenant_id`; if present, it must match the key tenant.
+- Direct REST docs use `X-Api-Key`, but this GPT Action/OpenAPI setup uses `Authorization: Bearer`.
 
 ## Logo
 Upload from: https://support.tehprof.kz/logo-dark.png

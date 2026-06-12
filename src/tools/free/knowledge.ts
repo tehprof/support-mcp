@@ -5,41 +5,88 @@
 import { registerTool } from '../../tool-registry.js';
 import { readDocsFile, listDocs } from '../../support-client.js';
 
+// Short words that add noise to content matching (RU/EN).
+const STOPWORDS = new Set([
+  'how', 'to', 'the', 'a', 'an', 'of', 'in', 'on', 'for', 'and', 'or', 'is', 'are',
+  'как', 'что', 'для', 'и', 'или', 'в', 'на', 'по', 'это', 'the',
+]);
+
+/** Split a query into meaningful tokens (split on space/hyphen/underscore/slash). */
+function tokenize(s: string): string[] {
+  return s
+    .toLowerCase()
+    .split(/[\s\-_/.,;:!?()«»"']+/)
+    .map(t => t.trim())
+    .filter(t => t.length >= 2 && !STOPWORDS.has(t));
+}
+
+/** First markdown heading (# ...) as the article title; falls back to slug tail. */
+function extractTitle(content: string, slug: string): string {
+  const m = content.match(/^#\s+(.+)$/m);
+  return m ? m[1].trim() : slug.split('/').pop() || slug;
+}
+
 registerTool({
   name: 'knowledge_search',
-  description: 'Search the Support knowledge base for articles about features, setup guides, and troubleshooting. Returns matching article titles and snippets.',
+  description: 'Search the Support knowledge base for articles about features, setup guides, API integration, and troubleshooting. Matches article title, slug, category and full content. Returns ranked matches with title and snippet.',
   tier: 'free',
   inputSchema: {
     type: 'object',
     properties: {
-      query: { type: 'string', description: 'Search query (e.g. "how to setup widget", "SLA configuration")' },
+      query: { type: 'string', description: 'Search query (e.g. "how to setup widget", "API integration", "SLA configuration")' },
     },
     required: ['query'],
   },
   handler: async (args) => {
-    const query = String(args.query).toLowerCase();
+    const rawQuery = String(args.query).toLowerCase().trim();
+    const tokens = tokenize(rawQuery);
     const docs = await listDocs();
 
-    const matches = docs.filter(d =>
-      d.slug.toLowerCase().includes(query) ||
-      d.category.toLowerCase().includes(query)
-    );
-
-    if (matches.length === 0) {
+    // Load content once per doc so we can match title + body, not just the slug.
+    const enriched = await Promise.all(docs.map(async d => {
+      const content = (await readDocsFile(d.slug)) || '';
+      const lc = content.toLowerCase();
       return {
-        message: 'No articles found. Try broader search terms.',
+        slug: d.slug,
+        category: d.category,
+        title: extractTitle(content, d.slug),
+        meta: `${d.slug} ${d.category}`.toLowerCase(),
+        titleLc: extractTitle(content, d.slug).toLowerCase(),
+        body: lc,
+      };
+    }));
+
+    // Score: slug/category hit = 10, title hit = 6, body hit = 1 per distinct token.
+    // Whole-query substring in slug/title is a strong bonus (keeps legacy behaviour).
+    const scored = enriched.map(d => {
+      let score = 0;
+      for (const tok of tokens) {
+        if (d.meta.includes(tok)) score += 10;
+        else if (d.titleLc.includes(tok)) score += 6;
+        else if (d.body.includes(tok)) score += 1;
+      }
+      if (rawQuery && (d.meta.includes(rawQuery) || d.titleLc.includes(rawQuery))) score += 15;
+      return { ...d, score };
+    }).filter(d => d.score > 0);
+
+    scored.sort((a, b) => b.score - a.score);
+
+    if (scored.length === 0) {
+      return {
+        message: 'No articles found. Try broader search terms or use knowledge_list to browse all articles.',
         available_categories: [...new Set(docs.map(d => d.category))],
         total_articles: docs.length,
       };
     }
 
     return {
-      results: matches.slice(0, 10).map(m => ({
+      results: scored.slice(0, 10).map(m => ({
         slug: m.slug,
+        title: m.title,
         category: m.category,
         read_with: `Use knowledge_read tool with slug "${m.slug}" to read full article`,
       })),
-      total_matches: matches.length,
+      total_matches: scored.length,
     };
   },
 });

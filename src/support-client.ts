@@ -20,6 +20,7 @@ export async function supportApi<T = unknown>(
     'X-MCP-Api-Key-Id': String(ctx.apiKeyId),
     'Content-Type': 'application/json',
   };
+  if (ctx.apiKey) headers.Authorization = `Bearer ${ctx.apiKey}`;
 
   let body: string | undefined;
 

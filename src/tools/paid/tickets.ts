@@ -59,7 +59,7 @@ registerTool({
 
 registerTool({
   name: 'tickets_create',
-  description: 'Create a new support ticket. Specify subject, description, priority, and optionally assign to an operator.',
+  description: 'Create a new support ticket. Specify subject, description, priority, and optionally assign to an operator. Can sync the customer company/contact by your own stable external IDs (idempotent, Zendesk external_id canon) so the ticket is auto-linked to the right company; pass external_ref for ticket-level idempotency (a repeat call returns the existing ticket).',
   tier: 'pro',
   inputSchema: {
     type: 'object',
@@ -70,6 +70,14 @@ registerTool({
       client_id: { type: 'number', description: 'Client ID (if creating on behalf of a client)' },
       operator_id: { type: 'number', description: 'Assign to specific operator' },
       category: { type: 'string', description: 'Ticket category' },
+      client_name: { type: 'string', description: 'Contact person name' },
+      client_email: { type: 'string', description: 'Contact email' },
+      client_phone: { type: 'string', description: 'Contact phone' },
+      company_external_id: { type: 'string', description: 'Your stable company ID — primary key to find/create and link the company (idempotent)' },
+      company_bin: { type: 'string', description: 'Company BIN/IIN (12 digits) — secondary company key' },
+      company_name: { type: 'string', description: 'Company name — used when creating a new company' },
+      contact_external_id: { type: 'string', description: 'Your stable user ID — strongest contact identity key' },
+      external_ref: { type: 'string', description: 'Idempotency key: a repeat call with the same value returns the existing ticket (deduplicated:true) instead of creating a duplicate' },
     },
     required: ['subject'],
   },
